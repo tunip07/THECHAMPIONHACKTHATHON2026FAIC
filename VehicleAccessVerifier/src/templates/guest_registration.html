@@ -16,7 +16,8 @@
           <span class="eyebrow">Tự động cấp mã khách</span>
         </div>
         <p class="hint">
-          Trang này chỉ dùng để đăng ký khách. Nhập biển số xe, sau đó tải ảnh hoặc
+          Trang này chỉ dùng để đăng ký khách. Nhập biển số xe, sau đó tải ảnh
+           hoặc
           video khuôn mặt lên, hoặc quay nhanh trực tiếp trên trình duyệt. Hệ thống sẽ
           tự động cấp mã khách mới cho mỗi lượt đăng ký.
         </p>
@@ -74,8 +75,6 @@
       let recordedChunks = [];
       let recordedBlob = null;
       let recordingTimeoutId = null;
-      const pageParams = new URLSearchParams(window.location.search);
-      const prefilledPlate = pageParams.get("plate");
 
       function setStatus(message, tone) {
         cameraStatus.textContent = message;
@@ -300,14 +299,6 @@
           setStatus("Đã chọn tệp tải lên. Hệ thống sẽ dùng tệp này để đăng ký.", "ready");
         }
       });
-
-      if (prefilledPlate && !plateInput.value) {
-        plateInput.value = prefilledPlate.toUpperCase();
-        setStatus(
-          "Biển số đã được chuyển từ web FPT Parking. Hãy tải hoặc quay khuôn mặt để hoàn tất.",
-          "ready"
-        );
-      }
 
       form.addEventListener("submit", (event) => {
         const hasUpload = uploadInput.files && uploadInput.files.length > 0;

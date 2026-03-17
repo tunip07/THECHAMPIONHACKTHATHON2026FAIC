@@ -17,6 +17,7 @@ IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".bmp", ".webp"}
 VIDEO_EXTENSIONS = {".mp4", ".avi", ".mov", ".mkv", ".webm"}
 FACE_VIDEO_SAMPLE_FRAME_COUNT = 12
 PLATE_VIDEO_SAMPLE_FRAME_COUNT = 12
+PREPROCESSING_PREVIEW_LIMIT = 3
 
 
 def resolve_path(*relative_parts):
@@ -166,15 +167,42 @@ def build_failure_payload(checkpoint_id: str, reason: str):
     }
 
 
+def select_face_preprocessing_entries(face_entries, limit: int):
+    ranked_entries = sorted(
+        face_entries,
+        key=lambda entry: (
+            entry["analysis"].face is not None,
+            entry["analysis"].quality_score or -1.0,
+            entry["analysis"].detection_confidence or -1.0,
+        ),
+        reverse=True,
+    )
+    return ranked_entries[:limit]
+
+
+def select_plate_preprocessing_entries(plate_entries, limit: int):
+    ranked_entries = sorted(
+        plate_entries,
+        key=lambda entry: (
+            entry["scan"].scanned_plate is not None,
+            entry["scan"].scanned_plate_confidence or -1.0,
+        ),
+        reverse=True,
+    )
+    return ranked_entries[:limit]
+
+
 def ensure_preprocessing_dirs(checkpoint_dir: str):
     preprocessing_dir = os.path.join(checkpoint_dir, "preprocessing")
     if os.path.isdir(preprocessing_dir):
         shutil.rmtree(preprocessing_dir)
     face_bbox_dir = os.path.join(preprocessing_dir, "face_bbox")
+    face_cropped_dir = os.path.join(preprocessing_dir, "face_cropped")
     plate_dir = os.path.join(preprocessing_dir, "plate")
     os.makedirs(face_bbox_dir, exist_ok=True)
+    os.makedirs(face_cropped_dir, exist_ok=True)
     os.makedirs(plate_dir, exist_ok=True)
-    return preprocessing_dir, face_bbox_dir, plate_dir
+    return preprocessing_dir, face_bbox_dir, face_cropped_dir, plate_dir
 
 
 def build_demo_best_match(best_match: dict):
@@ -183,19 +211,15 @@ def build_demo_best_match(best_match: dict):
 
     demo_match = {
         "scanned_plate": best_match["scanned_plate"],
+        "registered_plate": best_match.get("registered_plate"),
+        "plate_image": best_match["plate_image"],
         "plate_score": best_match["scanned_plate_confidence"],
         "plate_matches": best_match["plate_matches"],
-        "plate_image": best_match["plate_image"],
-    }
-    optional_fields = {
         "user_id": best_match.get("user_id"),
         "face_similarity": best_match.get("face_similarity"),
-        "registered_plate": best_match.get("registered_plate"),
         "face_image": best_match.get("face_image"),
     }
-    for key, value in optional_fields.items():
-        if value is not None:
-            demo_match[key] = value
+    demo_match = {key: value for key, value in demo_match.items() if value is not None}
     return demo_match
 
 
@@ -253,16 +277,14 @@ def verify_checkpoint(checkpoint_id: str, users_csv: str = None):
         return result_payload, output_path
 
     verifier = build_verifier(users_csv)
-    _, face_bbox_dir, plate_preprocessing_dir = ensure_preprocessing_dirs(checkpoint_dir)
+    _, face_bbox_dir, face_cropped_dir, plate_preprocessing_dir = ensure_preprocessing_dirs(
+        checkpoint_dir
+    )
 
     plate_results = []
+    plate_preprocessing_entries = []
     for plate_input in plate_inputs:
         detection_results = verifier.plate_detector.infer(plate_input["image_source"])
-        verifier.plate_detector.process_results(
-            detection_results,
-            plate_input["preprocessing_name"],
-            output_dir=plate_preprocessing_dir,
-        )
         plate_scan = verifier.scan_plate(
             plate_input["image_source"], detection_results=detection_results
         )
@@ -274,6 +296,22 @@ def verify_checkpoint(checkpoint_id: str, users_csv: str = None):
                 "readable": plate_scan.scanned_plate is not None,
                 "reason": plate_scan.reason,
             }
+        )
+        plate_preprocessing_entries.append(
+            {
+                "input": plate_input,
+                "detection_results": detection_results,
+                "scan": plate_scan,
+            }
+        )
+
+    for plate_entry in select_plate_preprocessing_entries(
+        plate_preprocessing_entries, PREPROCESSING_PREVIEW_LIMIT
+    ):
+        verifier.plate_detector.process_results(
+            plate_entry["detection_results"],
+            plate_entry["input"]["preprocessing_name"],
+            output_dir=plate_preprocessing_dir,
         )
 
     readable_plates = [plate for plate in plate_results if plate["readable"]]
@@ -291,13 +329,31 @@ def verify_checkpoint(checkpoint_id: str, users_csv: str = None):
     registered_user = verifier.lookup_registered_user_by_plate(best_plate_result["scanned_plate"])
 
     face_analyses = []
+    face_preprocessing_entries = []
     for face_input in face_inputs:
         face_analysis = verifier.face_service.analyze_face(face_input["image_source"])
         face_analysis.source = face_input["display_path"]
         face_analyses.append(face_analysis)
+        face_preprocessing_entries.append(
+            {
+                "input": face_input,
+                "analysis": face_analysis,
+            }
+        )
+
+    for face_entry in select_face_preprocessing_entries(
+        face_preprocessing_entries, PREPROCESSING_PREVIEW_LIMIT
+    ):
+        face_input = face_entry["input"]
+        face_analysis = face_entry["analysis"]
         verifier.face_service.save_detection_preview(
             face_input["image_source"],
             os.path.join(face_bbox_dir, face_input["preprocessing_name"]),
+            analysis=face_analysis,
+        )
+        verifier.face_service.save_face_crop(
+            face_input["image_source"],
+            os.path.join(face_cropped_dir, face_input["preprocessing_name"]),
             analysis=face_analysis,
         )
 

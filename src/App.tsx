@@ -15,6 +15,7 @@ import Login from './pages/Login';
 import Profile from './pages/Profile';
 import RegisterAccount from './pages/RegisterAccount';
 import RegisterVehicle from './pages/RegisterVehicle';
+import REGvehicleSUCCESS from './pages/REGvehicleSUCCESS';
 import ResetPassword from './pages/ResetPassword';
 import ResetPasswordSuccess from './pages/ResetPasswordSuccess';
 import Services from './pages/Services';
@@ -39,6 +40,7 @@ export default function App() {
 
           <Route element={<ProtectedRoute />}>
             <Route path="/register" element={<RegisterVehicle />} />
+            <Route path="/register-vehicle-success" element={<REGvehicleSUCCESS />} />
             <Route path="/services" element={<Services />} />
             <Route path="/wallet" element={<Wallet />} />
 

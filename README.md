@@ -24,6 +24,10 @@ Frontend nay dung **Supabase** lam backend auth chinh.
 4. Chay app:
    `npm run dev`
 
+Neu muon bat ca frontend va AI backend cung luc:
+
+`npm run start-all`
+
 ## Chay AI backend Vehicle Access Verifier
 
 Trang `Dang ky xe` se gui bien so va video khuon mat sang AI backend local truoc khi luu vao Supabase.
@@ -35,6 +39,16 @@ Chay backend bang lenh:
 Neu backend da chay dung, API health se co dia chi:
 
 `http://localhost:8000/api/health`
+
+API dang ky xe ma frontend su dung:
+
+`http://localhost:8000/api/register-vehicle`
+
+Frontend gui `multipart/form-data` gom:
+
+- `user_id`
+- `plate`
+- `face_media`
 
 ## Cau hinh Supabase bat buoc
 

@@ -236,27 +236,28 @@ export default function RegisterVehicle() {
 
     setSubmitting(true);
 
-    try {
-      await syncVehicleToAiBackend({
-        userId: user.id,
+    // Navigate immediately — don't wait for backend calls
+    navigate('/register-vehicle-success', {
+      state: {
         licensePlate,
-        faceMedia: recordedFaceMedia,
-      });
+        registeredAt: new Date().toLocaleString('vi-VN'),
+      },
+    });
 
-      await createVehicle({
-        userId: user.id,
-        vehicleName,
-        licensePlate,
-        faceMedia: recordedFaceMedia,
-      });
+    // Send face data to AI backend in background
+    syncVehicleToAiBackend({
+      userId: user.id,
+      licensePlate,
+      faceMedia: recordedFaceMedia,
+    }).catch((err) => console.error('Background AI sync failed:', err));
 
-      navigate('/services', { state: { vehicleCreated: true } });
-    } catch (saveError: any) {
-      console.error(saveError);
-      setError(saveError.message || 'Đăng ký xe thất bại.');
-    } finally {
-      setSubmitting(false);
-    }
+    // Save to Supabase in background
+    createVehicle({
+      userId: user.id,
+      vehicleName,
+      licensePlate,
+      faceMedia: recordedFaceMedia,
+    }).catch((err) => console.error('Background vehicle save failed:', err));
   };
 
   return (
@@ -283,8 +284,7 @@ export default function RegisterVehicle() {
               )}
 
               <div className="rounded-2xl border border-[#ec5b13]/15 bg-[#ec5b13]/5 px-4 py-3 text-sm text-slate-600 dark:text-slate-300">
-                Khi bạn bấm xác nhận, web sẽ gửi biển số và video khuôn mặt sang backend AI
-                Vehicle Access Verifier trước, sau đó mới lưu tiếp vào hệ thống web hiện tại.
+                Khi bạn bấm xác nhận, web sẽ thông tin đến hệ thống.
               </div>
 
               <section className="space-y-4">
@@ -295,7 +295,7 @@ export default function RegisterVehicle() {
                       Video khuôn mặt chủ xe
                     </h2>
                     <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                      Quay video rõ mặt trong khoảng 3 đến 5 giây để backend AI nhận diện ổn định
+                      Quay video rõ mặt trong khoảng 3 đến 5 giây để nhận diện ổn định
                       hơn.
                     </p>
                   </div>

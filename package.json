@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite --port=3000 --host=0.0.0.0",
     "ai-backend": ".\\VehicleAccessVerifier\\venv\\Scripts\\python.exe .\\VehicleAccessVerifier\\src\\main.py",
+    "start-all": "node .\\scripts\\start-all.mjs",
     "build": "vite build",
     "preview": "vite preview",
     "clean": "rm -rf dist",

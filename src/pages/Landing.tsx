@@ -126,7 +126,7 @@ export default function Landing() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {/* Card 1 */}
             <div 
-              onClick={() => navigate('/dashboard')}
+              onClick={() => navigate('/register')}
               className="group bg-white dark:bg-slate-900 rounded-2xl overflow-hidden shadow-sm hover:shadow-2xl hover:shadow-[#ec5b13]/10 border border-slate-200 dark:border-slate-800 transition-all duration-300 hover:-translate-y-2 flex flex-col cursor-pointer"
             >
               <div className="relative h-48 overflow-hidden">
@@ -160,7 +160,7 @@ export default function Landing() {
 
             {/* Card 2 */}
             <div 
-              onClick={() => navigate('/dashboard')}
+              onClick={() => navigate('/register')}
               className="group bg-white dark:bg-slate-900 rounded-2xl overflow-hidden shadow-sm hover:shadow-2xl hover:shadow-[#ec5b13]/10 border border-slate-200 dark:border-slate-800 transition-all duration-300 hover:-translate-y-2 flex flex-col cursor-pointer"
             >
               <div className="relative h-48 overflow-hidden">
@@ -196,7 +196,7 @@ export default function Landing() {
 
             {/* Card 3 */}
             <div 
-              onClick={() => navigate('/dashboard')}
+              onClick={() => navigate('/register')}
               className="group bg-white dark:bg-slate-900 rounded-2xl overflow-hidden shadow-sm hover:shadow-2xl hover:shadow-[#ec5b13]/10 border border-slate-200 dark:border-slate-800 transition-all duration-300 hover:-translate-y-2 flex flex-col cursor-pointer"
             >
               <div className="relative h-48 overflow-hidden">
