@@ -1,6 +1,7 @@
 # FPT Parking Auth Setup
 
-Frontend nay dung **Supabase** lam backend auth chinh.
+https://canva.link/8me051eczbxbwro
+Full Project link
 
 ## Chuc nang da co
 
